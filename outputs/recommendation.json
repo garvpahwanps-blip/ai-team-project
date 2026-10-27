@@ -1,0 +1,13 @@
+{
+  "source_room_id": "CSE-201",
+  "recommended_room_id": "CSE-305",
+  "recommended_room_capacity": 60,
+  "distance_meters": 120,
+  "route": [
+    "CSE-201",
+    "Corridor-2",
+    "Stairs-A",
+    "CSE-305"
+  ],
+  "message": "CSE-305 is the nearest suitable available classroom."
+}
