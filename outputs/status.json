@@ -1,0 +1,10 @@
+{
+  "room_id": "CSE-201",
+  "stable_occupancy": 54,
+  "capacity": 40,
+  "timetable_status": "SCHEDULED",
+  "course_name": "Artificial Intelligence",
+  "classroom_state": "OVER_CROWDED",
+  "alert": "Room capacity exceeded.",
+  "needs_alternative_room": true
+}
