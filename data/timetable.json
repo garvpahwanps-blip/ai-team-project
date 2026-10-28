@@ -16,5 +16,41 @@
     "expected_students": 25,
     "required_room_type": "LAB",
     "accessibility_required": false
+  },
+  {
+    "room_id": "CSE-202",
+    "course_name": "Data Structures",
+    "start_time": "10:00",
+    "end_time": "11:00",
+    "expected_students": 32,
+    "required_room_type": "CLASSROOM",
+    "accessibility_required": false
+  },
+  {
+    "room_id": "CSE-401",
+    "course_name": "Computer Networks",
+    "start_time": "10:00",
+    "end_time": "11:00",
+    "expected_students": 70,
+    "required_room_type": "CLASSROOM",
+    "accessibility_required": true
+  },
+  {
+    "room_id": "LAB-204",
+    "course_name": "Data Science Laboratory",
+    "start_time": "09:00",
+    "end_time": "11:00",
+    "expected_students": 35,
+    "required_room_type": "LAB",
+    "accessibility_required": true
+  },
+  {
+    "room_id": "MBA-201",
+    "course_name": "Business Analytics",
+    "start_time": "10:00",
+    "end_time": "11:00",
+    "expected_students": 62,
+    "required_room_type": "CLASSROOM",
+    "accessibility_required": false
   }
 ]

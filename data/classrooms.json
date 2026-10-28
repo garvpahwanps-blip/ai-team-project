@@ -20,6 +20,46 @@
     "available": true
   },
   {
+    "room_id": "CSE-104",
+    "room_name": "CSE Seminar Room 104",
+    "capacity": 25,
+    "room_type": "CLASSROOM",
+    "building": "CSE Block",
+    "floor": 1,
+    "accessibility": true,
+    "available": true
+  },
+  {
+    "room_id": "CSE-202",
+    "room_name": "CSE Lecture Hall 202",
+    "capacity": 35,
+    "room_type": "CLASSROOM",
+    "building": "CSE Block",
+    "floor": 2,
+    "accessibility": true,
+    "available": true
+  },
+  {
+    "room_id": "CSE-301",
+    "room_name": "CSE Lecture Hall 301",
+    "capacity": 48,
+    "room_type": "CLASSROOM",
+    "building": "CSE Block",
+    "floor": 3,
+    "accessibility": true,
+    "available": true
+  },
+  {
+    "room_id": "CSE-401",
+    "room_name": "CSE Lecture Hall 401",
+    "capacity": 80,
+    "room_type": "CLASSROOM",
+    "building": "CSE Block",
+    "floor": 4,
+    "accessibility": true,
+    "available": true
+  },
+  {
     "room_id": "LAB-101",
     "room_name": "Python Laboratory 101",
     "capacity": 30,
@@ -27,6 +67,46 @@
     "building": "Science Block",
     "floor": 1,
     "accessibility": false,
+    "available": true
+  },
+  {
+    "room_id": "LAB-102",
+    "room_name": "Computer Vision Laboratory 102",
+    "capacity": 36,
+    "room_type": "LAB",
+    "building": "Science Block",
+    "floor": 1,
+    "accessibility": true,
+    "available": true
+  },
+  {
+    "room_id": "LAB-204",
+    "room_name": "Data Science Laboratory 204",
+    "capacity": 45,
+    "room_type": "LAB",
+    "building": "Science Block",
+    "floor": 2,
+    "accessibility": true,
+    "available": true
+  },
+  {
+    "room_id": "ECE-102",
+    "room_name": "Electronics Lecture Hall 102",
+    "capacity": 50,
+    "room_type": "CLASSROOM",
+    "building": "ECE Block",
+    "floor": 1,
+    "accessibility": true,
+    "available": true
+  },
+  {
+    "room_id": "MBA-201",
+    "room_name": "Management Lecture Hall 201",
+    "capacity": 75,
+    "room_type": "CLASSROOM",
+    "building": "Management Block",
+    "floor": 2,
+    "accessibility": true,
     "available": true
   }
 ]
