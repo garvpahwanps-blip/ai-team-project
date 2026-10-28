@@ -1,0 +1,32 @@
+{
+  "normal": {
+    "room_id": "CSE-201",
+    "timestamp": "2026-10-27T10:30:00",
+    "confidence": 0.94,
+    "counts": [28, 31, 30, 32, 30]
+  },
+  "overcrowded": {
+    "room_id": "CSE-201",
+    "timestamp": "2026-10-27T10:30:00",
+    "confidence": 0.91,
+    "counts": [52, 54, 55, 53, 56]
+  },
+  "unscheduled_usage": {
+    "room_id": "CSE-201",
+    "timestamp": "2026-10-27T14:00:00",
+    "confidence": 0.92,
+    "counts": [14, 16, 15, 15, 17]
+  },
+  "empty": {
+    "room_id": "CSE-201",
+    "timestamp": "2026-10-27T14:00:00",
+    "confidence": 0.99,
+    "counts": [0, 0, 1, 0, 0]
+  },
+  "unavailable_lab": {
+    "room_id": "LAB-101",
+    "timestamp": "2026-10-27T11:30:00",
+    "confidence": 0.98,
+    "counts": [0, 0, 0, 0, 0]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "nodes": {
+    "CSE-201": {"coordinates": [0, 0]},
+    "CSE-CORRIDOR-2": {"coordinates": [24, 0]},
+    "STAIRS-A": {"coordinates": [52, 0]},
+    "CSE-CORRIDOR-3": {"coordinates": [52, 22]},
+    "CSE-305": {"coordinates": [86, 22]},
+    "SCIENCE-WALKWAY": {"coordinates": [90, -18]},
+    "SCIENCE-LOBBY": {"coordinates": [122, -18]},
+    "LAB-101": {"coordinates": [122, -40]}
+  },
+  "edges": [
+    {"from": "CSE-201", "to": "CSE-CORRIDOR-2", "distance_meters": 24},
+    {"from": "CSE-CORRIDOR-2", "to": "STAIRS-A", "distance_meters": 28},
+    {"from": "STAIRS-A", "to": "CSE-CORRIDOR-3", "distance_meters": 22},
+    {"from": "CSE-CORRIDOR-3", "to": "CSE-305", "distance_meters": 34},
+    {"from": "STAIRS-A", "to": "SCIENCE-WALKWAY", "distance_meters": 42},
+    {"from": "SCIENCE-WALKWAY", "to": "SCIENCE-LOBBY", "distance_meters": 32},
+    {"from": "SCIENCE-LOBBY", "to": "LAB-101", "distance_meters": 22}
+  ]
+}

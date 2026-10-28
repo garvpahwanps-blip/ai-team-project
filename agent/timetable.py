@@ -31,8 +31,11 @@ def parse_time(value: str | time | datetime) -> time:
         return value
     try:
         return time.fromisoformat(value)
-    except (TypeError, ValueError) as error:
-        raise ValueError("Time must use HH:MM or ISO datetime format.") from error
+    except (TypeError, ValueError):
+        try:
+            return datetime.fromisoformat(value.replace("Z", "+00:00")).time()
+        except (AttributeError, ValueError) as error:
+            raise ValueError("Time must use HH:MM or ISO datetime format.") from error
 
 
 def get_current_class(

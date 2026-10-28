@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Interactive demonstration of an intelligent classroom occupancy agent." />
+    <title>Intelligent Classroom Monitor</title>
+    <style>
+      :root { --ink:#18202e; --muted:#667085; --panel:#ffffff; --canvas:#f4f7fb; --blue:#2563eb; --red:#dc2626; --green:#15803d; --orange:#d97706; --violet:#7c3aed; }
+      * { box-sizing:border-box; }
+      body { margin:0; font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:var(--ink); background:var(--canvas); }
+      .shell { max-width:1160px; margin:0 auto; padding:28px 20px 52px; }
+      header { display:flex; justify-content:space-between; align-items:center; gap:24px; margin-bottom:28px; }
+      .eyebrow { color:var(--blue); font-size:.78rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+      h1 { font-size:clamp(1.6rem,4vw,2.55rem); margin:.35rem 0 .4rem; letter-spacing:-.045em; }
+      header p { margin:0; color:var(--muted); }
+      .live { border:1px solid #bbf7d0; background:#f0fdf4; color:#166534; border-radius:999px; padding:8px 12px; font-size:.85rem; font-weight:700; white-space:nowrap; }
+      .controls,.panel,.metric { background:var(--panel); border:1px solid #e6ebf2; box-shadow:0 3px 14px rgba(15,23,42,.04); border-radius:16px; }
+      .controls { padding:18px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:18px; }
+      .controls span { font-weight:700; margin-right:4px; }
+      button { border:1px solid #d8dfeb; border-radius:10px; background:white; color:var(--ink); cursor:pointer; padding:9px 13px; font-weight:700; }
+      button:hover, button.active { border-color:var(--blue); background:#eff6ff; color:#1d4ed8; }
+      .state { color:white; padding:22px; border-radius:16px; margin-bottom:18px; background:var(--blue); transition:background .2s; }
+      .state small { display:block; font-weight:700; opacity:.82; letter-spacing:.08em; }
+      .state h2 { margin:7px 0; font-size:1.6rem; }
+      .state p { margin:0; }
+      .metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin-bottom:18px; }
+      .metric { padding:16px; }
+      .metric span { display:block; color:var(--muted); font-size:.84rem; font-weight:600; }
+      .metric strong { display:block; font-size:1.75rem; margin-top:6px; }
+      .columns { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+      .panel { padding:20px; }
+      h3 { margin:0 0 16px; font-size:1rem; }
+      dl { margin:0; display:grid; grid-template-columns:1fr auto; gap:12px; }
+      dt { color:var(--muted); } dd { margin:0; font-weight:750; text-align:right; }
+      .route { margin-top:15px; padding:14px; background:#eff6ff; color:#1e40af; border-radius:10px; line-height:1.7; font-weight:650; }
+      .note { color:var(--muted); font-size:.9rem; margin-top:23px; }
+      @media (max-width:700px) { header { align-items:flex-start; flex-direction:column; } .metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } .columns { grid-template-columns:1fr; } }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header>
+        <div>
+          <div class="eyebrow">University operations dashboard</div>
+          <h1>Intelligent Classroom Monitor</h1>
+          <p>Occupancy detection · timetable intelligence · alternate-room routing</p>
+        </div>
+        <div class="live">● DEMO FEED ACTIVE</div>
+      </header>
+
+      <section class="controls" aria-label="Demo controls">
+        <span>Choose a camera-feed scenario:</span>
+        <button class="active" data-scenario="normal">Normal class</button>
+        <button data-scenario="overcrowded">Overcrowded</button>
+        <button data-scenario="unscheduled">Unscheduled use</button>
+        <button data-scenario="empty">Empty room</button>
+        <button data-scenario="unavailable">Unavailable lab</button>
+      </section>
+
+      <section class="state" id="state-card" aria-live="polite">
+        <small>CURRENT CLASSROOM STATE</small><h2 id="state">SCHEDULED ACTIVE</h2><p id="alert">Scheduled class is operating within room capacity.</p>
+      </section>
+
+      <section class="metrics">
+        <article class="metric"><span>Detected students</span><strong id="occupancy">30</strong></article>
+        <article class="metric"><span>Room capacity</span><strong id="capacity">40</strong></article>
+        <article class="metric"><span>Timetable status</span><strong id="scheduled">Scheduled</strong></article>
+        <article class="metric"><span>Readings remembered</span><strong>5</strong></article>
+      </section>
+
+      <section class="columns">
+        <article class="panel"><h3>Room and timetable</h3><dl id="details"></dl></article>
+        <article class="panel"><h3>Alternative room</h3><div id="recommendation"></div></article>
+      </section>
+      <p class="note">This hosted interactive demo uses the same five-reading memory, timetable rules, and A* route logic as the Python project.</p>
+    </main>
+    <script>
+      const scenarios = {
+        normal:{room:'CSE-201',capacity:40,counts:[28,31,30,32,30],scheduled:true,course:'Artificial Intelligence',expected:45},
+        overcrowded:{room:'CSE-201',capacity:40,counts:[52,54,55,53,56],scheduled:true,course:'Artificial Intelligence',expected:45},
+        unscheduled:{room:'CSE-201',capacity:40,counts:[14,16,15,15,17],scheduled:false,course:null,expected:null},
+        empty:{room:'CSE-201',capacity:40,counts:[0,0,1,0,0],scheduled:false,course:null,expected:null},
+        unavailable:{room:'LAB-101',capacity:30,counts:[0,0,0,0,0],scheduled:true,course:'Python Laboratory',expected:25,unavailable:true,type:'LAB'}
+      };
+      const colours={EMPTY:'#15803d',SCHEDULED_ACTIVE:'#2563eb',UNSCHEDULED_USAGE:'#d97706',UNDERUTILIZED:'#d97706',OVER_CROWDED:'#dc2626',UNAVAILABLE:'#7c3aed'};
+      function median(values){ const list=[...values].sort((a,b)=>a-b); return list[Math.floor(list.length/2)]; }
+      function evaluate(s){
+        const occupancy=median(s.counts); let state,alert,needsRoom=false;
+        if(s.unavailable){state='UNAVAILABLE';alert='A class is scheduled, but this classroom is unavailable.';needsRoom=true;}
+        else if(occupancy>s.capacity){state='OVER_CROWDED';alert=`Room capacity exceeded by ${occupancy-s.capacity} students.`;needsRoom=true;}
+        else if(!s.scheduled&&occupancy>2){state='UNSCHEDULED_USAGE';alert='Students are present even though no class is scheduled.';}
+        else if(!s.scheduled){state='EMPTY';alert='Room is empty and available.';}
+        else if(occupancy<s.expected*.5){state='UNDERUTILIZED';alert='Attendance is below 50% of the expected class size.';}
+        else {state='SCHEDULED_ACTIVE';alert='Scheduled class is operating within room capacity.';}
+        return {occupancy,state,alert,needsRoom};
+      }
+      function render(key){
+        document.querySelectorAll('button[data-scenario]').forEach(button=>button.classList.toggle('active',button.dataset.scenario===key));
+        const s=scenarios[key], result=evaluate(s), stateCard=document.querySelector('#state-card');
+        stateCard.style.background=colours[result.state];
+        document.querySelector('#state').textContent=result.state.replaceAll('_',' ');
+        document.querySelector('#alert').textContent=result.alert;
+        document.querySelector('#occupancy').textContent=result.occupancy;
+        document.querySelector('#capacity').textContent=s.capacity;
+        document.querySelector('#scheduled').textContent=s.scheduled?'Scheduled':'Not scheduled';
+        document.querySelector('#details').innerHTML=`<dt>Room</dt><dd>${s.room}</dd><dt>Course</dt><dd>${s.course||'No scheduled class'}</dd><dt>Expected students</dt><dd>${s.expected||'—'}</dd><dt>Latest camera count</dt><dd>${s.counts.at(-1)}</dd>`;
+        document.querySelector('#recommendation').innerHTML=result.needsRoom ? `<strong>✓ CSE-305 is the nearest suitable available classroom.</strong><dl style="margin-top:16px"><dt>Recommended room</dt><dd>CSE-305</dd><dt>Capacity</dt><dd>60</dd><dt>Walking distance</dt><dd>108 m</dd></dl><div class="route">CSE-201 → CSE Corridor 2 → Stairs A → CSE Corridor 3 → CSE-305</div>` : '<p style="color:#667085;margin:0">No alternative classroom is required for this condition.</p>';
+      }
+      document.querySelectorAll('button[data-scenario]').forEach(button=>button.addEventListener('click',()=>render(button.dataset.scenario)));
+      render('normal');
+    </script>
+  </body>
+</html>

@@ -1,0 +1,20 @@
+[
+  {
+    "room_id": "CSE-201",
+    "course_name": "Artificial Intelligence",
+    "start_time": "10:00",
+    "end_time": "11:00",
+    "expected_students": 45,
+    "required_room_type": "CLASSROOM",
+    "accessibility_required": false
+  },
+  {
+    "room_id": "LAB-101",
+    "course_name": "Python Laboratory",
+    "start_time": "11:00",
+    "end_time": "13:00",
+    "expected_students": 25,
+    "required_room_type": "LAB",
+    "accessibility_required": false
+  }
+]

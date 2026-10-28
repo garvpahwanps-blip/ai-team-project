@@ -1,0 +1,32 @@
+[
+  {
+    "room_id": "CSE-201",
+    "room_name": "CSE Lecture Hall 201",
+    "capacity": 40,
+    "room_type": "CLASSROOM",
+    "building": "CSE Block",
+    "floor": 2,
+    "accessibility": true,
+    "available": true
+  },
+  {
+    "room_id": "CSE-305",
+    "room_name": "CSE Lecture Hall 305",
+    "capacity": 60,
+    "room_type": "CLASSROOM",
+    "building": "CSE Block",
+    "floor": 3,
+    "accessibility": true,
+    "available": true
+  },
+  {
+    "room_id": "LAB-101",
+    "room_name": "Python Laboratory 101",
+    "capacity": 30,
+    "room_type": "LAB",
+    "building": "Science Block",
+    "floor": 1,
+    "accessibility": false,
+    "available": true
+  }
+]

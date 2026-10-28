@@ -1,1 +1,6 @@
-streamlit>=1.32.0
+# Dashboard (required for the web interface)
+streamlit>=1.39
+
+# Optional: needed only when a real image/video feed is connected to YOLO.
+opencv-python>=4.10
+ultralytics>=8.3

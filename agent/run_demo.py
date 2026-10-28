@@ -3,8 +3,17 @@
 from __future__ import annotations
 
 import json
+import sys
+from pathlib import Path
 
-from .classroom_agent import ClassroomAgent
+# This supports both ways of running the demo:
+#   python3 -m agent.run_demo      (terminal/module run)
+#   python3 agent/run_demo.py      (VS Code's normal Run Python File button)
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from agent.classroom_agent import ClassroomAgent
+else:
+    from .classroom_agent import ClassroomAgent
 
 
 def main() -> None:
