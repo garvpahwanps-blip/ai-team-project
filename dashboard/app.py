@@ -16,6 +16,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from agent.live_status import load_live_room_status
 from monitoring_system import ClassroomMonitoringSystem
 from vision.occupancy_detector import YOLOPersonCounter
 
@@ -29,6 +30,14 @@ STATE_PRESENTATION = {
     "OVER_CROWDED": ("Over capacity", "red", ":material/groups:"),
     "UNAVAILABLE": ("Room unavailable", "violet", ":material/block:"),
 }
+PLAIN_LANGUAGE_SUMMARIES = {
+    "EMPTY": "The room is currently empty, so there is no capacity problem to solve.",
+    "SCHEDULED_ACTIVE": "The camera count matches a scheduled class and the room has enough seats.",
+    "UNSCHEDULED_USAGE": "Students are in the room, but the timetable has no class scheduled there.",
+    "UNDERUTILIZED": "A scheduled class is running, but far fewer students are present than expected.",
+    "OVER_CROWDED": "Too many students are in the room, so the system looks for a nearby vacant alternative.",
+    "UNAVAILABLE": "This room cannot be used for its scheduled class, so the system searches for a replacement.",
+}
 
 
 def fresh_system() -> ClassroomMonitoringSystem:
@@ -37,19 +46,31 @@ def fresh_system() -> ClassroomMonitoringSystem:
 
 
 @st.cache_data
-def classroom_reference() -> list[dict[str, str | int]]:
+def classroom_reference(
+    source_modified_at: int, live_status_modified_at: int
+) -> list[dict[str, str | int]]:
     """Return friendly classroom details for faculty when selecting a room ID."""
+    del source_modified_at, live_status_modified_at
     source = PROJECT_ROOT / "data" / "classrooms.json"
     rooms = json.loads(source.read_text(encoding="utf-8"))
+    live_statuses = load_live_room_status(PROJECT_ROOT / "data")
     return [
         {
             "Room ID": room["room_id"],
             "Classroom name": room["room_name"],
             "Capacity": room["capacity"],
             "Type": room["room_type"].title(),
-            "Location": f"{room['building']}, floor {room['floor']}",
+            "Building": room["building"],
+            "Floor": room["floor"],
             "Accessible": "Yes" if room["accessibility"] else "No",
             "Configured availability": "Available" if room["available"] else "Unavailable",
+            "Live occupancy": live_statuses.get(room["room_id"], {}).get(
+                "current_occupancy", 0
+            ),
+            "Live status": live_statuses.get(room["room_id"], {}).get("state", "UNKNOWN"),
+            "Last status update": live_statuses.get(room["room_id"], {}).get(
+                "last_updated", "Not reported"
+            ),
         }
         for room in rooms
     ]
@@ -89,31 +110,45 @@ st.set_page_config(
 )
 
 if "result" not in st.session_state:
-    st.session_state.result = fresh_system().process_scenario("normal")
-    st.session_state.result_source = "Initial demonstration scenario"
+    st.session_state.result = fresh_system().process_scenario("overcrowded")
+    st.session_state.result_source = "Guided demo: overcrowded classroom (sample data)"
 
 with st.container(border=True):
     st.badge(
-        "Five-frame intelligent monitoring",
+        "Built for faculty and campus teams",
         icon=":material/auto_awesome:",
         color="primary",
     )
-    st.title("Classroom command center", icon=":material/sensors:")
-    st.caption(
-        "Turn a classroom video into an occupancy decision, timetable check, and room recommendation."
-    )
+    st.title("SmartClass AI", icon=":material/sensors:")
+    st.subheader("Know which classrooms are free, crowded, or being used without a booking.")
+    st.write("Upload a classroom video, and the system counts students, checks the timetable, and suggests a suitable room when action is needed.")
+    st.info("Start with the guided demo in the sidebar. It shows the full journey without needing a video.", title="New to this project?", icon=":material/tips_and_updates:")
+with st.container(border=True):
+    st.subheader("How it works", icon=":material/account_tree:")
+    step_columns = st.columns(3)
+    with step_columns[0].container(border=True, height="stretch"):
+        st.markdown(":material/videocam: **1. Count students**")
+        st.caption("The camera feed or uploaded video is sampled at five points to estimate how many students are present.")
+    with step_columns[1].container(border=True, height="stretch"):
+        st.markdown(":material/psychology: **2. Check the situation**")
+        st.caption("The agent compares the count with room capacity and the timetable. It remembers five readings instead of trusting one frame.")
+    with step_columns[2].container(border=True, height="stretch"):
+        st.markdown(":material/near_me: **3. Recommend a room**")
+        st.caption("If the room is crowded or unavailable, the system finds the closest suitable room that is currently vacant.")
+with st.expander("What does the system check before recommending another room?", icon=":material/help:"):
+    st.write("It checks seating capacity, room type, accessibility, building/floor, timetable availability, live occupancy, and walking distance.")
 
 run_upload = False
 run_scenario = False
 uploaded_video = None
 
 with st.sidebar:
-    st.header("Run an analysis", icon=":material/tune:")
-    st.caption("Choose an input, then let the agent evaluate the classroom.")
+    st.header("Start an analysis", icon=":material/tune:")
+    st.info("Select **Simulated scenario**, keep **Overcrowded**, then choose **Run sample demo**. You will see a complete recommendation without uploading a video.", title="Try this first", icon=":material/play_circle:")
     feed_type = st.segmented_control(
-        "Feed source",
+        "How would you like to test it?",
         ["Upload a video", "Simulated scenario"],
-        default="Upload a video",
+        default="Simulated scenario",
         required=True,
         width="stretch",
         key="feed_source",
@@ -144,12 +179,13 @@ with st.sidebar:
     else:
         with st.form("simulated_scenario_form"):
             scenario = st.selectbox(
-                "Camera-feed scenario",
+                "Sample classroom situation",
                 ["normal", "overcrowded", "unscheduled_usage", "empty", "unavailable_lab"],
+                index=1,
                 format_func=lambda item: item.replace("_", " ").title(),
             )
             run_scenario = st.form_submit_button(
-                "Run simulated scenario",
+                "Run sample demo",
                 type="primary",
                 icon=":material/play_arrow:",
                 width="stretch",
@@ -186,10 +222,14 @@ state = decision["classroom_state"]
 state_label, state_colour, state_icon = STATE_PRESENTATION.get(
     state, (state.replace("_", " ").title(), "gray", ":material/info:")
 )
+plain_summary = PLAIN_LANGUAGE_SUMMARIES.get(
+    state, "The system evaluated the camera reading, room details, and timetable information."
+)
 
 with st.container(horizontal=True, vertical_alignment="center"):
     st.badge(state_label, icon=state_icon, color=state_colour)
     st.caption(st.session_state.result_source)
+st.caption("The result below answers two questions: Is this classroom okay to use right now? If not, where should the class go?")
 
 metrics = st.columns(4)
 metrics[0].metric(
@@ -222,7 +262,7 @@ metrics[3].metric(
 )
 
 with st.container(border=True):
-    st.subheader("Agent decision", icon=":material/psychology:")
+    st.subheader("What the system found", icon=":material/psychology:")
     st.badge(state_label, icon=state_icon, color=state_colour)
     if state in {"OVER_CROWDED", "UNAVAILABLE"}:
         st.error(decision["alert"], title="Action required", icon=state_icon)
@@ -230,18 +270,20 @@ with st.container(border=True):
         st.warning(decision["alert"], title="Review recommended", icon=state_icon)
     else:
         st.success(decision["alert"], title="Operating normally", icon=state_icon)
+    st.caption(plain_summary)
+    st.caption("The decision is based on the middle value from five camera readings, so one unusual frame does not control the result.")
 
 left, right = st.columns(2)
 with left.container(border=True, height="stretch"):
-    st.subheader("Room context", icon=":material/meeting_room:")
-    st.write(f":material/door_front: **Room**  \\n+{decision['room_id']}")
-    st.write(f":material/menu_book: **Scheduled course**  \\n+{decision['course_name'] or 'No class scheduled'}")
-    st.write(f":material/groups: **Expected students**  \\n+{decision['expected_students'] or '—'}")
-    st.write(f":material/visibility: **Latest camera count**  \\n+{decision['detected_students']}")
-    st.write(f":material/verified: **Detection confidence**  \\n+{decision['confidence']:.0%}")
+    st.subheader("What the camera and timetable say", icon=":material/meeting_room:")
+    st.write(f":material/door_front: **Room:** {decision['room_id']}")
+    st.write(f":material/menu_book: **Scheduled course:** {decision['course_name'] or 'No class scheduled'}")
+    st.write(f":material/groups: **Expected students:** {decision['expected_students'] or '—'}")
+    st.write(f":material/visibility: **Latest camera count:** {decision['detected_students']}")
+    st.write(f":material/verified: **Detection confidence:** {decision['confidence']:.0%}")
 
 with right.container(border=True, height="stretch"):
-    st.subheader("Alternative room", icon=":material/near_me:")
+    st.subheader("Where the class should go", icon=":material/near_me:")
     recommendation = result["recommendation"]
     if recommendation and recommendation["alternative_found"]:
         st.success(
@@ -249,12 +291,18 @@ with right.container(border=True, height="stretch"):
             title="Best available match",
             icon=":material/check_circle:",
         )
+        st.caption("This room matches the required capacity and type, is currently vacant, and has the shortest suitable campus route.")
         st.metric(
             "Recommended room",
             recommendation["recommended_room_id"],
             border=True,
             icon=":material/meeting_room:",
         )
+        live_occupancy = recommendation.get("recommended_room_current_occupancy")
+        if live_occupancy is None:
+            st.caption("Live occupancy has not been reported for this room yet.")
+        else:
+            st.write(f":material/sensors: **Live occupancy:** {live_occupancy} students")
         st.write(f":material/event_seat: **Capacity:** {recommendation['recommended_room_capacity']}")
         st.write(f":material/directions_walk: **Walking distance:** {recommendation['distance_meters']} m")
         st.code("  →  ".join(recommendation["route"]), language=None)
@@ -267,15 +315,67 @@ with right.container(border=True, height="stretch"):
             icon=":material/check_circle:",
         )
 
-with st.expander("Technical integration data", icon=":material/data_object:"):
+with st.expander("For developers: view raw system data", icon=":material/data_object:"):
     st.json(result)
 
 with st.container(border=True):
-    st.subheader("Classroom directory", icon=":material/apartment:")
-    st.caption("Use one of these room IDs when analysing an uploaded video.")
+    st.subheader("Explore classrooms on campus", icon=":material/apartment:")
+    st.caption("Use this reference list to compare room capacities, locations, facilities, and current occupancy.")
+    classrooms_source = PROJECT_ROOT / "data" / "classrooms.json"
+    live_status_source = PROJECT_ROOT / "data" / "live_room_status.json"
+    directory_rows = classroom_reference(
+        classrooms_source.stat().st_mtime_ns, live_status_source.stat().st_mtime_ns
+    )
+    buildings = sorted({str(room["Building"]) for room in directory_rows})
+    room_types = sorted({str(room["Type"]) for room in directory_rows})
+
+    building_filter, type_filter = st.columns(2)
+    selected_buildings = building_filter.multiselect(
+        "Building",
+        buildings,
+        default=buildings,
+        key="directory_building_filter",
+    )
+    selected_room_types = type_filter.multiselect(
+        "Room type",
+        room_types,
+        default=room_types,
+        key="directory_type_filter",
+    )
+    visible_rooms = [
+        room
+        for room in directory_rows
+        if room["Building"] in selected_buildings and room["Type"] in selected_room_types
+    ]
+
+    directory_metrics = st.columns(4)
+    directory_metrics[0].metric(
+        "Rooms shown",
+        len(visible_rooms),
+        border=True,
+        icon=":material/meeting_room:",
+    )
+    directory_metrics[1].metric(
+        "Total seats",
+        sum(int(room["Capacity"]) for room in visible_rooms),
+        border=True,
+        icon=":material/event_seat:",
+    )
+    directory_metrics[2].metric(
+        "Accessible rooms",
+        sum(room["Accessible"] == "Yes" for room in visible_rooms),
+        border=True,
+        icon=":material/accessibility_new:",
+    )
+    directory_metrics[3].metric(
+        "Rooms in use",
+        sum(int(room["Live occupancy"]) > 0 for room in visible_rooms),
+        border=True,
+        icon=":material/sensors:",
+    )
     st.dataframe(
-        classroom_reference(),
+        visible_rooms,
         hide_index=True,
         width="stretch",
-        alt="Reference table of all configured classrooms, capacities, types, locations, and accessibility.",
+        alt="Classroom directory showing configured rooms, capacities, types, buildings, and accessibility.",
     )

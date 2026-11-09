@@ -2,6 +2,13 @@
 
 All modules use the exact room IDs in `data/classrooms.json` and ISO timestamps,
 for example `2026-10-27T10:30:00`.
+## Shared live room-status feed
+The file data/live_room_status.json holds the current live status of every room.
+For each room ID, Person 1 records: current_occupancy (a whole number), state
+(such as VACANT or IN_CLASS), and last_updated (an ISO timestamp).
+Person 1 updates this feed after each camera observation. The dashboard displays
+the live values, and the recommendation module never selects a room with a
+current_occupancy greater than zero.
 
 ## Detection to intelligent agent
 

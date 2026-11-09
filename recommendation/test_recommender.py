@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+import shutil
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -28,6 +31,19 @@ class RoomRecommenderTests(unittest.TestCase):
 
     def test_rejects_room_when_someone_is_already_inside(self) -> None:
         result = self.recommender.recommend(self.request, {"CSE-305": 3})
+        self.assertFalse(result["alternative_found"])
+
+    def test_live_status_feed_rejects_an_occupied_alternative(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            data_directory = Path(temporary_directory) / "data"
+            shutil.copytree(PROJECT_ROOT / "data", data_directory)
+            status_path = data_directory / "live_room_status.json"
+            statuses = json.loads(status_path.read_text(encoding="utf-8"))
+            statuses["CSE-305"]["current_occupancy"] = 4
+            status_path.write_text(json.dumps(statuses), encoding="utf-8")
+
+            result = RoomRecommender(data_directory).recommend(self.request)
+
         self.assertFalse(result["alternative_found"])
 
 

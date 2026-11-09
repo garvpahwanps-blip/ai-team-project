@@ -1,0 +1,13 @@
+{
+  "CSE-201": {"current_occupancy": 30, "state": "IN_CLASS", "last_updated": "2026-10-27T10:30:00"},
+  "CSE-305": {"current_occupancy": 0, "state": "VACANT", "last_updated": "2026-10-27T10:30:00"},
+  "CSE-104": {"current_occupancy": 0, "state": "VACANT", "last_updated": "2026-10-27T10:30:00"},
+  "CSE-202": {"current_occupancy": 32, "state": "IN_CLASS", "last_updated": "2026-10-27T10:30:00"},
+  "CSE-301": {"current_occupancy": 0, "state": "VACANT", "last_updated": "2026-10-27T10:30:00"},
+  "CSE-401": {"current_occupancy": 70, "state": "IN_CLASS", "last_updated": "2026-10-27T10:30:00"},
+  "LAB-101": {"current_occupancy": 0, "state": "VACANT", "last_updated": "2026-10-27T10:30:00"},
+  "LAB-102": {"current_occupancy": 18, "state": "IN_USE", "last_updated": "2026-10-27T10:30:00"},
+  "LAB-204": {"current_occupancy": 35, "state": "IN_CLASS", "last_updated": "2026-10-27T10:30:00"},
+  "ECE-102": {"current_occupancy": 0, "state": "VACANT", "last_updated": "2026-10-27T10:30:00"},
+  "MBA-201": {"current_occupancy": 62, "state": "IN_CLASS", "last_updated": "2026-10-27T10:30:00"}
+}

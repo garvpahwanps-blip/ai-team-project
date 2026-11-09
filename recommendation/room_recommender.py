@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from agent.live_status import load_live_room_status
 from agent.timetable import get_current_class
 
 from .campus_graph import CampusGraph
@@ -14,6 +15,7 @@ from .campus_graph import CampusGraph
 class RoomRecommender:
     def __init__(self, data_directory: str | Path = "data") -> None:
         directory = Path(data_directory)
+        self.data_directory = directory
         self.rooms: list[dict[str, Any]] = json.loads(
             (directory / "classrooms.json").read_text(encoding="utf-8")
         )
@@ -21,6 +23,13 @@ class RoomRecommender:
             (directory / "timetable.json").read_text(encoding="utf-8")
         )
         self.graph = CampusGraph(directory / "campus_graph.json")
+
+    def _live_occupancies(self) -> dict[str, int]:
+        """Read the current occupancy feed instead of assuming other rooms are empty."""
+        return {
+            room_id: int(status["current_occupancy"])
+            for room_id, status in load_live_room_status(self.data_directory).items()
+        }
 
     def _candidate_rooms(
         self,
@@ -54,9 +63,10 @@ class RoomRecommender:
         current_occupancies: dict[str, int] | None = None,
     ) -> dict[str, Any]:
         """Return the nearest room satisfying availability and teaching constraints."""
-        current_occupancies = current_occupancies or {}
+        live_occupancies = self._live_occupancies()
+        live_occupancies.update(current_occupancies or {})
         routes: list[tuple[int, dict[str, Any], list[str]]] = []
-        for room in self._candidate_rooms(request, current_occupancies):
+        for room in self._candidate_rooms(request, live_occupancies):
             result = self.graph.find_route(request["source_room_id"], room["room_id"])
             if result is not None:
                 route, distance = result
@@ -79,6 +89,7 @@ class RoomRecommender:
             "recommended_room_id": room["room_id"],
             "recommended_room_name": room["room_name"],
             "recommended_room_capacity": room["capacity"],
+            "recommended_room_current_occupancy": live_occupancies.get(room["room_id"], 0),
             "distance_meters": distance,
             "route": route,
             "message": f"{room['room_id']} is the nearest suitable available classroom.",
